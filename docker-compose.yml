@@ -1,0 +1,87 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - reto-webflux-net
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - reto-webflux-net
+
+  localstack:
+    image: localstack/localstack:latest
+    environment:
+      SERVICES: sqs,dynamodb
+      AWS_DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./deployment/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - reto-webflux-net
+
+  app:
+    build:
+      context: ./applications/app-service/build/libs
+      dockerfile: ../../../../deployment/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      ENTRYPOINT_SQS_ENDPOINT: http://localstack:4566
+      ADAPTER_SQS_ENDPOINT: http://localstack:4566
+      ADAPTERS_R2DBC_HOST: postgres
+      ADAPTERS_R2DBC_PORT: 5432
+      ADAPTERS_R2DBC_DATABASE: postgres
+      ADAPTERS_R2DBC_USERNAME: postgres
+      ADAPTERS_R2DBC_PASSWORD: postgres
+      AWS_REGION: us-east-1
+      AWS_DYNAMODB_ENDPOINT: http://localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    volumes:
+      - ./deployment/localstack/aws-credentials:/home/appuser/.aws/credentials:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    networks:
+      - reto-webflux-net
+
+networks:
+  reto-webflux-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  localstack_data:
