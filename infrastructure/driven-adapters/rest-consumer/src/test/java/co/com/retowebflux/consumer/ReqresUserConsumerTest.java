@@ -46,7 +46,7 @@ class ReqresUserConsumerTest {
         var response = reqresUserConsumer.getUserById(2);
 
         StepVerifier.create(response)
-                .expectNextMatches(user -> user.getId().equals(2)
+                .expectNextMatches(user -> user.getIdReqRes().equals(2)
                         && user.getEmail().equals("janet.weaver@reqres.in")
                         && user.getFirstName().equals("Janet")
                         && user.getLastName().equals("Weaver"))

@@ -18,6 +18,7 @@ public class UserEntity {
 
     @Id
     private Integer id;
+    private Integer idReqRes;
     private String email;
     private String firstName;
     private String lastName;

@@ -37,7 +37,7 @@ public class ReqresUserConsumer implements UserProviderGateway {
     private static User toDomain(ReqresUserResponse response) {
         ReqresUserData data = response.data();
         return User.builder()
-                .id(data.id())
+                .idReqRes(data.id())
                 .email(data.email())
                 .firstName(data.firstName())
                 .lastName(data.lastName())
