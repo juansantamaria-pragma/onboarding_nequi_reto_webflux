@@ -1,5 +1,7 @@
 package co.com.retowebflux.api;
 
+import co.com.retowebflux.api.dto.ResponseCreateUser;
+import co.com.retowebflux.usecase.createuser.CreateUserUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -9,12 +11,14 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class Handler {
-//private  final UseCase useCase;
-//private  final UseCase2 useCase2;
 
-    public Mono<ServerResponse> listenGETUseCase(ServerRequest serverRequest) {
-        // useCase.logic();
-        return ServerResponse.ok().bodyValue("");
+    private final CreateUserUseCase createUserUseCase;
+
+    public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
+        return Mono.fromCallable(() -> Integer.parseInt(serverRequest.pathVariable("id")))
+                .flatMap(createUserUseCase::execute)
+                .map(ResponseCreateUser::from)
+                .flatMap(response -> ServerResponse.ok().bodyValue(response));
     }
 
     public Mono<ServerResponse> listenGETOtherUseCase(ServerRequest serverRequest) {
