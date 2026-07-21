@@ -19,7 +19,7 @@ public class ReqresUserConsumer implements UserProviderGateway {
 
     @Override
     @CircuitBreaker(name = "reqresGetUser")
-    public Mono<User> getUserById(Integer id) {
+    public Mono<User> getUserById(Long id) {
         return client
                 .get()
                 .uri("/users/{id}", id)

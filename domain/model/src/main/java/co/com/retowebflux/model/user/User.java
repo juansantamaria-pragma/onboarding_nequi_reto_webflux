@@ -13,8 +13,8 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class User {
-    private Integer id;
-    private Integer idReqRes;
+    private Long id;
+    private Long idReqRes;
     private String email;
     private String firstName;
     private String lastName;
