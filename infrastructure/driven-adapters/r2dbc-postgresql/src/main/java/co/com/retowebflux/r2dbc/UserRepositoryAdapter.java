@@ -27,4 +27,9 @@ public class UserRepositoryAdapter extends ReactiveAdapterOperations<
     public Flux<User> findAll (){
         return repository.findAll().map(this::toEntity);
     }
+
+    @Override
+    public Flux<User> findByFirstNameAndLastName(String firstName, String lastName) {
+        return repository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(firstName, lastName).map(this::toEntity);
+    }
 }
