@@ -1,18 +1,22 @@
-package co.com.retowebflux.model.user;
-import lombok.Builder;
+package co.com.retowebflux.r2dbc;
+
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class User {
+@Table("users")
+public class UserEntity {
+
+    @Id
     private Integer id;
     private Integer idReqRes;
     private String email;

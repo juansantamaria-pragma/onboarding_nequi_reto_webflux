@@ -1,6 +1,5 @@
 package co.com.retowebflux.sqs.sender.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
@@ -17,10 +16,9 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import java.net.URI;
 
 @Configuration
-@ConditionalOnMissingBean(SqsAsyncClient.class)
 public class SQSSenderConfig {
 
-    @Bean
+    @Bean("senderSqsClient")
     public SqsAsyncClient configSqs(SQSSenderProperties properties, MetricPublisher publisher) {
         return SqsAsyncClient.builder()
                 .endpointOverride(resolveEndpoint(properties))
