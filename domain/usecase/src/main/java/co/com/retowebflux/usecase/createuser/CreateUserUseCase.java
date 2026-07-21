@@ -16,7 +16,7 @@ public class CreateUserUseCase {
     private final UserProviderGateway userProviderGateway;
     private final UserEventPublisherGateway userEventPublisherGateway;
 
-    public Mono<User> execute(Integer idReqRes) {
+    public Mono<User> execute(Long idReqRes) {
         return Mono.justOrEmpty(idReqRes)
                 .filter(validId -> validId > 0)
                 .switchIfEmpty(Mono.error(new BusinessException(TechnicalMessage.INVALID_USER_ID)))

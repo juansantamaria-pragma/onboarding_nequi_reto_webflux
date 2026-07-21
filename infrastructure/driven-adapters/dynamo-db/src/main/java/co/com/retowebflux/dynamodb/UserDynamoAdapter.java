@@ -18,7 +18,7 @@ public class UserDynamoAdapter extends TemplateAdapterOperations<User, String, U
     }
 
     @Override
-    public Mono<User> findById(Integer id) {
+    public Mono<User> findById(Long id) {
         return getById(String.valueOf(id));
     }
 

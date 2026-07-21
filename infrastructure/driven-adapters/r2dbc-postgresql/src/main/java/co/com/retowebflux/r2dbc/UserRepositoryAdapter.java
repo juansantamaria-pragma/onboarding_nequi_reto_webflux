@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 public class UserRepositoryAdapter extends ReactiveAdapterOperations<
     User,
     UserEntity,
-    Integer,
+    Long,
     UserReactiveRepository
 > implements UserRepository {
     public UserRepositoryAdapter(UserReactiveRepository repository, ObjectMapper mapper) {
@@ -19,7 +19,7 @@ public class UserRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<User> findByIdReqRes(Integer idReqRes) {
+    public Mono<User> findByIdReqRes(Long idReqRes) {
         return repository.findByIdReqRes(idReqRes).map(this::toEntity);
     }
 }

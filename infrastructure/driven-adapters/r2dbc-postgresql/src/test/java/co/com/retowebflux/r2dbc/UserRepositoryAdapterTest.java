@@ -26,23 +26,23 @@ class UserRepositoryAdapterTest {
 
     @Test
     void mustFindValueById() {
-        UserEntity entity = UserEntity.builder().id(1).email("test@test.com").firstName("Test").lastName("User").build();
-        User user = User.builder().id(1).email("test@test.com").firstName("Test").lastName("User").build();
+        UserEntity entity = UserEntity.builder().id(1L).email("test@test.com").firstName("Test").lastName("User").build();
+        User user = User.builder().id(1L).email("test@test.com").firstName("Test").lastName("User").build();
 
-        when(repository.findById(1)).thenReturn(Mono.just(entity));
+        when(repository.findById(1L)).thenReturn(Mono.just(entity));
         when(mapper.map(entity, User.class)).thenReturn(user);
 
-        Mono<User> result = repositoryAdapter.findById(1);
+        Mono<User> result = repositoryAdapter.findById(1L);
 
         StepVerifier.create(result)
-                .expectNextMatches(value -> value.getId().equals(1))
+                .expectNextMatches(value -> value.getId().equals(1L))
                 .verifyComplete();
     }
 
     @Test
     void mustSaveValue() {
-        UserEntity entity = UserEntity.builder().id(1).email("test@test.com").firstName("Test").lastName("User").build();
-        User user = User.builder().id(1).email("test@test.com").firstName("Test").lastName("User").build();
+        UserEntity entity = UserEntity.builder().id(1L).email("test@test.com").firstName("Test").lastName("User").build();
+        User user = User.builder().id(1L).email("test@test.com").firstName("Test").lastName("User").build();
 
         when(mapper.map(user, UserEntity.class)).thenReturn(entity);
         when(repository.save(entity)).thenReturn(Mono.just(entity));
@@ -51,7 +51,7 @@ class UserRepositoryAdapterTest {
         Mono<User> result = repositoryAdapter.save(user);
 
         StepVerifier.create(result)
-                .expectNextMatches(value -> value.getId().equals(1))
+                .expectNextMatches(value -> value.getId().equals(1L))
                 .verifyComplete();
     }
 }

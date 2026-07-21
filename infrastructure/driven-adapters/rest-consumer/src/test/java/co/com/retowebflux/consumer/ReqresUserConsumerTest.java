@@ -43,10 +43,10 @@ class ReqresUserConsumerTest {
                 .setResponseCode(HttpStatus.OK.value())
                 .setBody("{\"data\":{\"id\":2,\"email\":\"janet.weaver@reqres.in\",\"first_name\":\"Janet\",\"last_name\":\"Weaver\"}}"));
 
-        var response = reqresUserConsumer.getUserById(2);
+        var response = reqresUserConsumer.getUserById(2L);
 
         StepVerifier.create(response)
-                .expectNextMatches(user -> user.getIdReqRes().equals(2)
+                .expectNextMatches(user -> user.getIdReqRes().equals(2L)
                         && user.getEmail().equals("janet.weaver@reqres.in")
                         && user.getFirstName().equals("Janet")
                         && user.getLastName().equals("Weaver"))
@@ -58,7 +58,7 @@ class ReqresUserConsumerTest {
     void getUserByIdNotFound() {
         mockBackEnd.enqueue(new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()));
 
-        var response = reqresUserConsumer.getUserById(999);
+        var response = reqresUserConsumer.getUserById(999L);
 
         StepVerifier.create(response)
                 .expectErrorMatches(BusinessException.class::isInstance)
@@ -70,7 +70,7 @@ class ReqresUserConsumerTest {
     void getUserByIdExternalFailure() {
         mockBackEnd.enqueue(new MockResponse().setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value()));
 
-        var response = reqresUserConsumer.getUserById(2);
+        var response = reqresUserConsumer.getUserById(2L);
 
         StepVerifier.create(response)
                 .expectErrorMatches(TechnicalException.class::isInstance)
