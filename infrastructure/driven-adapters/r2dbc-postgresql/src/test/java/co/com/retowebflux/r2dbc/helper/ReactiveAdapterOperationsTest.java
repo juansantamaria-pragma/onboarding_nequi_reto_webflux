@@ -4,9 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.reactivecommons.utils.ObjectMapper;
-import org.springframework.data.domain.Example;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -67,19 +65,6 @@ class ReactiveAdapterOperationsTest {
         when(repository.findById("1")).thenReturn(Mono.just(data));
 
         StepVerifier.create(operations.findById("1"))
-                .expectNext(entity)
-                .verifyComplete();
-    }
-
-    @Test
-    void findByExample() {
-        DummyEntity entity = new DummyEntity("1", "test");
-        DummyData data = new DummyData("1", "test");
-
-        when(mapper.map(entity, DummyData.class)).thenReturn(data);
-        when(repository.findAll(any(Example.class))).thenReturn(Flux.just(data));
-
-        StepVerifier.create(operations.findByExample(entity))
                 .expectNext(entity)
                 .verifyComplete();
     }
@@ -164,5 +149,5 @@ class ReactiveAdapterOperationsTest {
         }
     }
 
-    interface DummyRepository extends ReactiveCrudRepository<DummyData, String>, ReactiveQueryByExampleExecutor<DummyData> {}
+    interface DummyRepository extends ReactiveCrudRepository<DummyData, String> {}
 }
