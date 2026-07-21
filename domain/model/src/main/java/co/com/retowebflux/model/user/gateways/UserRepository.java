@@ -11,5 +11,7 @@ public interface UserRepository {
 
     Flux<User> findAll();
 
+    Flux<User> findByFirstNameAndLastName(String firstName, String lastName);
+
     Mono<User> save(User user);
 }
