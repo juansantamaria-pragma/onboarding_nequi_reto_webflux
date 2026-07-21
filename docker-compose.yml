@@ -64,6 +64,8 @@ services:
       ADAPTERS_R2DBC_DATABASE: postgres
       ADAPTERS_R2DBC_USERNAME: postgres
       ADAPTERS_R2DBC_PASSWORD: postgres
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       AWS_REGION: us-east-1
       AWS_DYNAMODB_ENDPOINT: http://localstack:4566
       AWS_ACCESS_KEY_ID: test
