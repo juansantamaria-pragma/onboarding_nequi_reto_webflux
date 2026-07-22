@@ -1,7 +1,10 @@
 package co.com.retowebflux.api;
 
+import co.com.retowebflux.api.dto.RequestCreateUser;
 import co.com.retowebflux.api.dto.ResponseCreateUser;
 import co.com.retowebflux.api.dto.ResponseGetUser;
+import co.com.retowebflux.model.enums.TechnicalMessage;
+import co.com.retowebflux.model.exception.BusinessException;
 import co.com.retowebflux.usecase.createuser.CreateUserUseCase;
 import co.com.retowebflux.usecase.findallusers.FindAllUsersUseCase;
 import co.com.retowebflux.usecase.finduserbyid.FindUserByIdUseCase;
@@ -23,7 +26,9 @@ public class Handler {
     private final FindUsersByNameUseCase findUsersByNameUseCase;
 
     public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
-        return Mono.fromCallable(() -> Long.parseLong(serverRequest.pathVariable("id")))
+        return serverRequest.bodyToMono(RequestCreateUser.class)
+                .switchIfEmpty(Mono.error(new BusinessException(TechnicalMessage.INVALID_REQUEST)))
+                .map(RequestCreateUser::idReqRes)
                 .flatMap(createUserUseCase::execute)
                 .map(ResponseCreateUser::from)
                 .flatMap(response -> ServerResponse.ok().bodyValue(response));
@@ -46,8 +51,7 @@ public class Handler {
 
     public Mono<ServerResponse> searchUsersByName(ServerRequest serverRequest) {
         String firstName = serverRequest.queryParam("firstName").orElse(null);
-        String lastName = serverRequest.queryParam("lastName").orElse(null);
-        return findUsersByNameUseCase.execute(firstName, lastName)
+        return findUsersByNameUseCase.execute(firstName)
                 .map(ResponseGetUser::from)
                 .collectList()
                 .flatMap(users -> ServerResponse.ok().bodyValue(users));

@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface UserCacheRepository {
-    Mono<List<User>> findByFirstNameAndLastName(String firstName, String lastName);
+    Mono<List<User>> findByFirstName(String firstName);
 
-    Mono<Void> save(String firstName, String lastName, List<User> users);
+    Mono<Void> save(String firstName, List<User> users);
 }

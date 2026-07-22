@@ -7,5 +7,5 @@ import reactor.core.publisher.Mono;
 public interface UserReactiveRepository extends ReactiveCrudRepository<UserEntity, Long> {
     Mono<UserEntity> findByIdReqRes(Long idReqRes);
     Flux<UserEntity> findAll();
-    Flux<UserEntity> findByFirstNameIgnoreCaseAndLastNameIgnoreCase(String firstName, String lastName);
+    Flux<UserEntity> findByFirstNameIgnoreCase(String firstName);
 }
