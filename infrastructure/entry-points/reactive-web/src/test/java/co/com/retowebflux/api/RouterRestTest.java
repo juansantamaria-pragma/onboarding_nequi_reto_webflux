@@ -1,60 +1,78 @@
 package co.com.retowebflux.api;
 
-import org.assertj.core.api.Assertions;
+import co.com.retowebflux.api.exceptionhandler.GlobalErrorHandler;
+import co.com.retowebflux.model.enums.TechnicalMessage;
+import co.com.retowebflux.model.exception.BusinessException;
+import co.com.retowebflux.model.user.User;
+import co.com.retowebflux.usecase.createuser.CreateUserUseCase;
+import co.com.retowebflux.usecase.findallusers.FindAllUsersUseCase;
+import co.com.retowebflux.usecase.finduserbyid.FindUserByIdUseCase;
+import co.com.retowebflux.usecase.findusersbyname.FindUsersByNameUseCase;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
+import java.time.Duration;
+
+import static org.mockito.Mockito.when;
+
+@ContextConfiguration(classes = {RouterRest.class, Handler.class, GlobalErrorHandler.class})
 @WebFluxTest
 class RouterRestTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
-    @Test
-    void testListenGETUseCase() {
-        webTestClient.get()
-                .uri("/api/usecase/path")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+    @MockitoBean
+    private CreateUserUseCase createUserUseCase;
+
+    @MockitoBean
+    private FindUserByIdUseCase findUserByIdUseCase;
+
+    @MockitoBean
+    private FindAllUsersUseCase findAllUsersUseCase;
+
+    @MockitoBean
+    private FindUsersByNameUseCase findUsersByNameUseCase;
+
+    @BeforeEach
+    void increaseResponseTimeout() {
+        webTestClient = webTestClient.mutate().responseTimeout(Duration.ofSeconds(20)).build();
     }
 
     @Test
-    void testListenGETOtherUseCase() {
+    void getUserHappyPath() {
+        User user = User.builder().id(1L).idReqRes(1L).email("a@a.com").firstName("A").lastName("B").build();
+        when(findUserByIdUseCase.execute(1L)).thenReturn(Mono.just(user));
+
         webTestClient.get()
-                .uri("/api/otherusercase/path")
+                .uri("/api/v1/users/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+                .expectBody()
+                .jsonPath("$.id").isEqualTo(1)
+                .jsonPath("$.firstName").isEqualTo("A");
     }
 
     @Test
-    void testListenPOSTUseCase() {
-        webTestClient.post()
-                .uri("/api/usecase/otherpath")
+    void getUserSadPath() {
+        when(findUserByIdUseCase.execute(99L))
+                .thenReturn(Mono.error(new BusinessException(TechnicalMessage.USER_NOT_FOUND)));
+
+        webTestClient.get()
+                .uri("/api/v1/users/99")
                 .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("")
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("404")
+                .jsonPath("$.param").isEqualTo("id");
     }
 }
