@@ -28,12 +28,12 @@ public class FindUsersByNameUseCase {
     private Flux<User> searchWithCache(String firstName, String lastName) {
         return cacheRepository.findByFirstNameAndLastName(firstName, lastName)
                 .flatMapMany(Flux::fromIterable)
-                .switchIfEmpty(
+                .switchIfEmpty(Flux.defer(() ->
                         repository.findByFirstNameAndLastName(firstName, lastName)
                                 .collectList()
                                 .filter(users -> !users.isEmpty())
                                 .flatMap(users -> cacheRepository.save(firstName, lastName, users).thenReturn(users))
                                 .flatMapMany(Flux::fromIterable)
-                );
+                ));
     }
 }
