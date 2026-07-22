@@ -26,19 +26,19 @@ public class UserRedisAdapter extends ReactiveTemplateAdapterOperations<UserSear
     }
 
     @Override
-    public Mono<List<User>> findByFirstNameAndLastName(String firstName, String lastName) {
-        String key = buildKey(firstName, lastName);
+    public Mono<List<User>> findByFirstName(String firstName) {
+        String key = buildKey(firstName);
         return findById(key)
                 .doOnNext(cache -> log.info("Redis cache HIT key={} size={}", key, cache.getUsers().size()))
                 .map(UserSearchCache::getUsers);
     }
 
     @Override
-    public Mono<Void> save(String firstName, String lastName, List<User> users) {
-        return save(buildKey(firstName, lastName), new UserSearchCache(users), ttlMillis).then();
+    public Mono<Void> save(String firstName, List<User> users) {
+        return save(buildKey(firstName), new UserSearchCache(users), ttlMillis).then();
     }
 
-    private String buildKey(String firstName, String lastName) {
-        return "user:search:%s:%s".formatted(firstName.toLowerCase(), lastName.toLowerCase());
+    private String buildKey(String firstName) {
+        return "user:search:%s".formatted(firstName.toLowerCase());
     }
 }

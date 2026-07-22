@@ -46,14 +46,14 @@ class UserRedisAdapterTest {
     }
 
     @Test
-    void findByFirstNameAndLastNameHappyPath() {
+    void findByFirstNameHappyPath() {
         User user = User.builder().id(1L).firstName("George").lastName("Edwards").build();
         UserSearchCache cache = new UserSearchCache(List.of(user));
 
-        when(valueOps.get("user:search:george:edwards")).thenReturn(Mono.just(cache));
+        when(valueOps.get("user:search:george")).thenReturn(Mono.just(cache));
         when(mapper.map(cache, UserSearchCache.class)).thenReturn(cache);
 
-        StepVerifier.create(adapter.findByFirstNameAndLastName("George", "Edwards"))
+        StepVerifier.create(adapter.findByFirstName("George"))
                 .expectNext(List.of(user))
                 .verifyComplete();
     }
@@ -65,7 +65,7 @@ class UserRedisAdapterTest {
         when(mapper.map(any(UserSearchCache.class), eq(UserSearchCache.class))).thenReturn(cache);
         when(valueOps.set(anyString(), eq(cache))).thenReturn(Mono.error(new RuntimeException("redis down")));
 
-        StepVerifier.create(adapter.save("George", "Edwards", List.of()))
+        StepVerifier.create(adapter.save("George", List.of()))
                 .expectErrorMessage("redis down")
                 .verify();
     }

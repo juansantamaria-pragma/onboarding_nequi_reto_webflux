@@ -15,24 +15,21 @@ public class FindUsersByNameUseCase {
     private final UserRepository repository;
     private final UserCacheRepository cacheRepository;
 
-    public Flux<User> execute(String firstName, String lastName) {
+    public Flux<User> execute(String firstName) {
         return Mono.justOrEmpty(firstName)
                 .filter(fn -> !fn.isBlank())
                 .switchIfEmpty(Mono.error(new BusinessException(TechnicalMessage.INVALID_REQUEST)))
-                .flatMap(fn -> Mono.justOrEmpty(lastName)
-                        .filter(ln -> !ln.isBlank())
-                        .switchIfEmpty(Mono.error(new BusinessException(TechnicalMessage.INVALID_REQUEST))))
-                .flatMapMany(ln -> searchWithCache(firstName, lastName));
+                .flatMapMany(this::searchWithCache);
     }
 
-    private Flux<User> searchWithCache(String firstName, String lastName) {
-        return cacheRepository.findByFirstNameAndLastName(firstName, lastName)
+    private Flux<User> searchWithCache(String firstName) {
+        return cacheRepository.findByFirstName(firstName)
                 .flatMapMany(Flux::fromIterable)
                 .switchIfEmpty(Flux.defer(() ->
-                        repository.findByFirstNameAndLastName(firstName, lastName)
+                        repository.findByFirstName(firstName)
                                 .collectList()
                                 .filter(users -> !users.isEmpty())
-                                .flatMap(users -> cacheRepository.save(firstName, lastName, users).thenReturn(users))
+                                .flatMap(users -> cacheRepository.save(firstName, users).thenReturn(users))
                                 .flatMapMany(Flux::fromIterable)
                 ));
     }

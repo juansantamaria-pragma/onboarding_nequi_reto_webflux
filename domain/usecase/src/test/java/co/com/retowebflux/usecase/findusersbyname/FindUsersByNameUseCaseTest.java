@@ -33,17 +33,17 @@ class FindUsersByNameUseCaseTest {
     void executeHappyPath() {
         User user = User.builder().id(1L).firstName("George").lastName("Edwards").build();
 
-        when(cacheRepository.findByFirstNameAndLastName("George", "Edwards"))
+        when(cacheRepository.findByFirstName("George"))
                 .thenReturn(Mono.just(List.of(user)));
 
-        StepVerifier.create(useCase.execute("George", "Edwards"))
+        StepVerifier.create(useCase.execute("George"))
                 .expectNext(user)
                 .verifyComplete();
     }
 
     @Test
     void executeSadPath() {
-        StepVerifier.create(useCase.execute(" ", "Edwards"))
+        StepVerifier.create(useCase.execute(" "))
                 .expectErrorMatches(e -> e instanceof BusinessException be
                         && be.getTechnicalMessage() == TechnicalMessage.INVALID_REQUEST)
                 .verify();
