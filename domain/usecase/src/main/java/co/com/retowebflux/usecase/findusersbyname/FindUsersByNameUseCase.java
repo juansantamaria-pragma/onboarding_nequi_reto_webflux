@@ -19,10 +19,10 @@ public class FindUsersByNameUseCase {
         return Mono.justOrEmpty(firstName)
                 .filter(fn -> !fn.isBlank())
                 .switchIfEmpty(Mono.error(new BusinessException(TechnicalMessage.INVALID_REQUEST)))
-                .then(Mono.justOrEmpty(lastName))
-                .filter(ln -> !ln.isBlank())
-                .switchIfEmpty(Mono.error(new BusinessException(TechnicalMessage.INVALID_REQUEST)))
-                .thenMany(searchWithCache(firstName, lastName));
+                .flatMap(fn -> Mono.justOrEmpty(lastName)
+                        .filter(ln -> !ln.isBlank())
+                        .switchIfEmpty(Mono.error(new BusinessException(TechnicalMessage.INVALID_REQUEST))))
+                .flatMapMany(ln -> searchWithCache(firstName, lastName));
     }
 
     private Flux<User> searchWithCache(String firstName, String lastName) {
