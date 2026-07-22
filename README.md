@@ -21,8 +21,8 @@ Base URL: `http://localhost:8080`
 
 | Método | Path | Qué hace | Devuelve |
 |---|---|---|---|
-| `POST` | `/api/v1/users/{id}` | Busca el usuario `{id}` en reqres.in; si no existe localmente lo persiste en Postgres y publica un evento (SQS → DynamoDB) | `200` con el usuario creado/sincronizado |
-| `GET` | `/api/v1/users/search?firstName=&lastName=` | Busca por nombre + apellido exacto (case-insensitive). Cache-aside: primero Redis, si no está, cae a Postgres y cachea el resultado | `200` con lista de usuarios (vacía si no hay match) |
+| `POST` | `/api/v1/users` | Recibe `{ "idReqRes": <n> }` en el body; busca ese usuario en reqres.in, si no existe localmente lo persiste en Postgres y publica un evento (SQS → DynamoDB) | `200` con el usuario creado/sincronizado |
+| `GET` | `/api/v1/users/search?firstName=` | Busca por `firstName` (case-insensitive). Cache-aside: primero Redis, si no está, cae a Postgres y cachea el resultado | `200` con la lista de coincidencias (vacía si no hay match) |
 | `GET` | `/api/v1/users/{id}` | Busca un usuario ya persistido por su id interno | `200` con el usuario, `404` si no existe |
 | `GET` | `/api/v1/users` | Lista todos los usuarios persistidos | `200` con la lista completa |
 
