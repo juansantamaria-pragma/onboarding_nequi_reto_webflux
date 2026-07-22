@@ -3,6 +3,7 @@ package co.com.retowebflux.redis;
 import co.com.retowebflux.model.user.User;
 import co.com.retowebflux.model.user.gateways.UserCacheRepository;
 import co.com.retowebflux.redis.template.helper.ReactiveTemplateAdapterOperations;
+import lombok.extern.log4j.Log4j2;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+@Log4j2
 @Component
 public class UserRedisAdapter extends ReactiveTemplateAdapterOperations<UserSearchCache, String, UserSearchCache>
         implements UserCacheRepository {
@@ -25,7 +27,10 @@ public class UserRedisAdapter extends ReactiveTemplateAdapterOperations<UserSear
 
     @Override
     public Mono<List<User>> findByFirstNameAndLastName(String firstName, String lastName) {
-        return findById(buildKey(firstName, lastName)).map(UserSearchCache::getUsers);
+        String key = buildKey(firstName, lastName);
+        return findById(key)
+                .doOnNext(cache -> log.info("Redis cache HIT key={} size={}", key, cache.getUsers().size()))
+                .map(UserSearchCache::getUsers);
     }
 
     @Override

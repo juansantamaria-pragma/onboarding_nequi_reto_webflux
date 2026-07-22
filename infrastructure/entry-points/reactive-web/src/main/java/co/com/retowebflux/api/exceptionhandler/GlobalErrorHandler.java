@@ -3,6 +3,7 @@ package co.com.retowebflux.api.exceptionhandler;
 import co.com.retowebflux.api.dto.ErrorResponse;
 import co.com.retowebflux.model.enums.TechnicalMessage;
 import co.com.retowebflux.model.exception.ProcessorException;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.HttpMessageWriter;
@@ -16,6 +17,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+@Log4j2
 @Component
 @Order(-2)
 public class GlobalErrorHandler implements ErrorWebExceptionHandler {
@@ -26,9 +28,24 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
                 ? processorException.getTechnicalMessage()
                 : TechnicalMessage.INTERNAL_ERROR;
 
+        logError(exchange, ex, technicalMessage);
+
         return ServerResponse.status(HttpStatus.valueOf(Integer.parseInt(technicalMessage.getCode())))
                 .bodyValue(ErrorResponse.from(technicalMessage))
                 .flatMap(response -> response.writeTo(exchange, new ResponseContext()));
+    }
+
+    private void logError(ServerWebExchange exchange, Throwable ex, TechnicalMessage technicalMessage) {
+        String method = exchange.getRequest().getMethod().name();
+        String path = exchange.getRequest().getPath().value();
+
+        if (ex instanceof ProcessorException) {
+            log.warn("Business error method={} path={} code={} message={} param={}",
+                    method, path, technicalMessage.getCode(), technicalMessage.getMessage(), technicalMessage.getParam());
+        } else {
+            log.error("Unhandled exception method={} path={} exceptionClass={} message={}",
+                    method, path, ex.getClass().getName(), ex.getMessage(), ex);
+        }
     }
 
     private static class ResponseContext implements ServerResponse.Context {
