@@ -1,47 +1,61 @@
-# Proyecto Base Implementando Clean Architecture
+# Reto Webflux — Nequi
 
-## Antes de Iniciar
+API reactiva de gestión de usuarios construida con Spring WebFlux (Java 25), siguiendo Clean Architecture. Sincroniza usuarios desde un proveedor externo (reqres.in), los persiste en PostgreSQL, cachea búsquedas por nombre en Redis y replica en DynamoDB vía eventos por SQS.
 
-Empezaremos por explicar los diferentes componentes del proyectos y partiremos de los componentes externos, continuando con los componentes core de negocio (dominio) y por último el inicio y configuración de la aplicación.
+## Servicios que levanta la app
 
-Lee el artículo [Clean Architecture — Aislando los detalles](https://medium.com/bancolombia-tech/clean-architecture-aislando-los-detalles-4f9530f35d7a)
+El `docker-compose.yml` levanta 4 servicios:
 
-# Arquitectura
+| Servicio | Imagen | Puerto | Rol |
+|---|---|---|---|
+| `app` | build local (`deployment/Dockerfile`) | 8080 | La API. Depende de que los 3 siguientes estén healthy. |
+| `postgres` | postgres:16-alpine | 5432 | Persistencia principal de usuarios (tabla `users`). |
+| `redis` | redis:7-alpine | 6379 | Cache-aside para la búsqueda por nombre. |
+| `localstack` | localstack/localstack:4.4.0 | 4566 | Emula SQS y DynamoDB para desarrollo local. |
 
-![Clean Architecture](https://miro.medium.com/max/1400/1*ZdlHz8B0-qu9Y-QO3AXR_w.png)
+Detalle de qué hace cada uno y cómo levantarlos individualmente → [getting-started.md](getting-started.md).
 
-## Domain
+## Rutas
 
-Es el módulo más interno de la arquitectura, pertenece a la capa del dominio y encapsula la lógica y reglas del negocio mediante modelos y entidades del dominio.
+Base URL: `http://localhost:8080`
 
-## Usecases
+| Método | Path | Qué hace | Devuelve |
+|---|---|---|---|
+| `POST` | `/api/v1/users/{id}` | Busca el usuario `{id}` en reqres.in; si no existe localmente lo persiste en Postgres y publica un evento (SQS → DynamoDB) | `200` con el usuario creado/sincronizado |
+| `GET` | `/api/v1/users/search?firstName=&lastName=` | Busca por nombre + apellido exacto (case-insensitive). Cache-aside: primero Redis, si no está, cae a Postgres y cachea el resultado | `200` con lista de usuarios (vacía si no hay match) |
+| `GET` | `/api/v1/users/{id}` | Busca un usuario ya persistido por su id interno | `200` con el usuario, `404` si no existe |
+| `GET` | `/api/v1/users` | Lista todos los usuarios persistidos | `200` con la lista completa |
 
-Este módulo gradle perteneciente a la capa del dominio, implementa los casos de uso del sistema, define lógica de aplicación y reacciona a las invocaciones desde el módulo de entry points, orquestando los flujos hacia el módulo de entities.
+Todos los errores responden con el mismo shape:
+```json
+{ "code": "400", "message": "...", "param": "..." }
+```
 
-## Infrastructure
+Colección de Postman lista para importar: [`Reto_Nequi.postman_collection.json`](Reto_Nequi.postman_collection.json) (incluye las 4 rutas con ejemplos).
 
-### Helpers
+## Cómo levantar la app
 
-En el apartado de helpers tendremos utilidades generales para los Driven Adapters y Entry Points.
+```bash
+docker-compose up --build
+```
 
-Estas utilidades no están arraigadas a objetos concretos, se realiza el uso de generics para modelar comportamientos
-genéricos de los diferentes objetos de persistencia que puedan existir, este tipo de implementaciones se realizan
-basadas en el patrón de diseño [Unit of Work y Repository](https://medium.com/@krzychukosobudzki/repository-design-pattern-bc490b256006)
+Esperá a que los healthchecks pasen; la API queda expuesta en `http://localhost:8080`.
 
-Estas clases no puede existir solas y debe heredarse su compartimiento en los **Driven Adapters**
+```bash
+docker-compose down          # apagar
+docker-compose logs -f app   # ver logs de la app
+```
 
-### Driven Adapters
+Guía detallada (paso a paso, rol de cada servicio, cómo correr sin reconstruir el contenedor) → [getting-started.md](getting-started.md).
 
-Los driven adapter representan implementaciones externas a nuestro sistema, como lo son conexiones a servicios rest,
-soap, bases de datos, lectura de archivos planos, y en concreto cualquier origen y fuente de datos con la que debamos
-interactuar.
+## Arquitectura y patrones
 
-### Entry Points
+Clean Architecture (plugin de Bancolombia) en módulos Gradle:
 
-Los entry points representan los puntos de entrada de la aplicación o el inicio de los flujos de negocio.
+- `domain/model` — entidades y contratos (gateways) del negocio, sin dependencias externas.
+- `domain/usecase` — casos de uso, orquestan los gateways.
+- `infrastructure/driven-adapters/*` — implementaciones concretas de los gateways: `r2dbc-postgresql` (persistencia), `redis` (cache), `dynamo-db` (réplica), `sqs-sender` (publicación de eventos), `rest-consumer` (cliente reactivo a reqres.in con circuit breaker).
+- `infrastructure/entry-points/*` — puntos de entrada: `reactive-web` (rutas HTTP funcionales) y `sqs-listener` (consumidor de eventos).
+- `applications/app-service` — ensambla todos los módulos e inicia la app.
 
-## Application
-
-Este módulo es el más externo de la arquitectura, es el encargado de ensamblar los distintos módulos, resolver las dependencias y crear los beans de los casos de use (UseCases) de forma automática, inyectando en éstos instancias concretas de las dependencias declaradas. Además inicia la aplicación (es el único módulo del proyecto donde encontraremos la función “public static void main(String[] args)”.
-
-**Los beans de los casos de uso se disponibilizan automaticamente gracias a un '@ComponentScan' ubicado en esta capa.**
+Patrones puntuales: cache-aside (búsqueda por nombre), circuit breaker (Resilience4j, protege la llamada a reqres.in), y un helper genérico reutilizable para adapters de persistencia clave-valor (Redis/DynamoDB).

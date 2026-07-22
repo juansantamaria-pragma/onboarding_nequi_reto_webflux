@@ -11,6 +11,13 @@ spring:
       path: "/h2"
   profiles:
     include: null
+  sql:
+    init:
+      mode: "always"
+  data:
+    redis:
+      host: "localhost"
+      port: 6379
 management:
   endpoints:
     web:
@@ -20,6 +27,9 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 entrypoint:
@@ -36,6 +46,10 @@ adapter:
     region: "us-east-1"
     queueUrl: "http://localhost:4566/000000000000/sample"
     endpoint: "http://localhost:4566"
+  restconsumer:
+    timeout: 5000
+    url: "https://reqres.in/api"
+    apikey: "free_user_3GdHemp4xlxJn1s6Sg0WPD61415"
 adapters:
   r2dbc:
     host: "localhost"
@@ -44,7 +58,23 @@ adapters:
     schema: "public"
     username: "postgres"
     password: "postgres"
+  redis:
+    ttl-seconds: 600
 aws:
   region: "us-east-1"
   dynamodb:
     endpoint: "http://localhost:4566"
+resilience4j:
+  circuitbreaker:
+    instances:
+      reqresGetUser:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
+        recordExceptions:
+        - "co.com.retowebflux.model.exception.TechnicalException"

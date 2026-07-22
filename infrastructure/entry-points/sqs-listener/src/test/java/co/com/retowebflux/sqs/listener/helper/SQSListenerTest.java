@@ -1,6 +1,5 @@
 package co.com.retowebflux.sqs.listener.helper;
 
-import co.com.retowebflux.sqs.listener.SQSProcessor;
 import co.com.retowebflux.sqs.listener.config.SQSProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
@@ -57,7 +57,7 @@ class SQSListenerTest {
         var sqsListener = SQSListener.builder()
                 .client(asyncClient)
                 .properties(sqsProperties)
-                .processor(new SQSProcessor())
+                .processor(message -> Mono.empty())
                 .operation("operation")
                 .build();
 

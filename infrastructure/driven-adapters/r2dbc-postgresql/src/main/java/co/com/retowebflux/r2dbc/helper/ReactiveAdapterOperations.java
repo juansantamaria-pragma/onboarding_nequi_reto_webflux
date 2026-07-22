@@ -1,8 +1,6 @@
 package co.com.retowebflux.r2dbc.helper;
 
 import org.reactivecommons.utils.ObjectMapper;
-import org.springframework.data.domain.Example;
-import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -10,7 +8,7 @@ import reactor.core.publisher.Mono;
 import java.lang.reflect.ParameterizedType;
 import java.util.function.Function;
 
-public abstract class ReactiveAdapterOperations<E, D, I, R extends ReactiveCrudRepository<D, I> & ReactiveQueryByExampleExecutor<D>> {
+public abstract class ReactiveAdapterOperations<E, D, I, R extends ReactiveCrudRepository<D, I>> {
     protected R repository;
     protected ObjectMapper mapper;
     private final Class<D> dataClass;
@@ -53,11 +51,6 @@ public abstract class ReactiveAdapterOperations<E, D, I, R extends ReactiveCrudR
 
     public Mono<E> findById(I id) {
         return repository.findById(id).map(this::toEntity);
-    }
-
-    public Flux<E> findByExample(E entity) {
-        return repository.findAll(Example.of(toData(entity)))
-                .map(this::toEntity);
     }
 
     public Flux<E> findAll() {

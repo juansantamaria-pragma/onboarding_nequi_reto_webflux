@@ -1,7 +1,13 @@
+# syntax=docker/dockerfile:1
+FROM eclipse-temurin:25-jdk-alpine AS builder
+WORKDIR /workspace
+COPY . .
+RUN --mount=type=cache,target=/root/.gradle sh gradlew :app-service:bootJar --no-daemon
+
 FROM eclipse-temurin:25-jdk-alpine
 VOLUME /tmp
-COPY *.jar RetoWebflux.jar
-ENV JAVA_OPTS=" -Xshareclasses:name=cacheapp,cacheDir=/cache,nonfatal -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Djava.security.egd=file:/dev/./urandom"
+COPY --from=builder /workspace/applications/app-service/build/libs/*.jar RetoWebflux.jar
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Djava.security.egd=file:/dev/./urandom"
 # Replace with a non-root user to avoid running the container with excessive privileges
 RUN adduser -D appuser
 USER appuser

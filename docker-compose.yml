@@ -1,3 +1,5 @@
+name: "reto_webflux"
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -30,7 +32,7 @@ services:
       - reto-webflux-net
 
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:4.4.0
     environment:
       SERVICES: sqs,dynamodb
       AWS_DEFAULT_REGION: us-east-1
@@ -49,8 +51,8 @@ services:
 
   app:
     build:
-      context: ./applications/app-service/build/libs
-      dockerfile: ../../../../deployment/Dockerfile
+      context: .
+      dockerfile: deployment/Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -62,6 +64,8 @@ services:
       ADAPTERS_R2DBC_DATABASE: postgres
       ADAPTERS_R2DBC_USERNAME: postgres
       ADAPTERS_R2DBC_PASSWORD: postgres
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       AWS_REGION: us-east-1
       AWS_DYNAMODB_ENDPOINT: http://localstack:4566
       AWS_ACCESS_KEY_ID: test
