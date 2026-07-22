@@ -28,7 +28,7 @@ Emula AWS localmente (`SERVICES: sqs,dynamodb`), para no depender de una cuenta 
 - Cola SQS `sample`
 - Tabla DynamoDB `users` (partition key `id`, tipo String, on-demand)
 
-Rol dentro del flujo: cuando `POST /api/v1/users/{id}` crea/sincroniza un usuario, la app publica un evento a la cola `sample`; el módulo `sqs-listener` lo consume y replica el usuario en DynamoDB.
+Rol dentro del flujo: cuando `POST /api/v1/users` crea/sincroniza un usuario, la app publica un evento a la cola `sample`; el módulo `sqs-listener` lo consume y replica el usuario en DynamoDB (nombres y email se guardan en mayúscula).
 
 ### `app` (puerto 8080)
 La API Spring WebFlux. Las variables de entorno en `docker-compose.yml` mapean 1:1 a grupos de `application.yaml` (`ADAPTERS_R2DBC_*`, `SPRING_DATA_REDIS_*`, `AWS_DYNAMODB_ENDPOINT`, etc.), sobreescribiendo los defaults (`localhost`) para apuntar a los hostnames de los otros contenedores dentro de la red `reto-webflux-net`.
@@ -50,8 +50,11 @@ Importá [`Reto_Nequi.postman_collection.json`](Reto_Nequi.postman_collection.js
 
 O con `curl`:
 ```bash
+curl -X POST http://localhost:8080/api/v1/users \
+  -H "Content-Type: application/json" \
+  -d '{"idReqRes": 11}'
 curl http://localhost:8080/api/v1/users
-curl "http://localhost:8080/api/v1/users/search?firstName=George&lastName=Edwards"
+curl "http://localhost:8080/api/v1/users/search?firstName=George"
 ```
 
 ## Salud de la app

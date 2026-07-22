@@ -22,8 +22,21 @@ public class SQSProcessor implements Function<Message, Mono<Void>> {
     @Override
     public Mono<Void> apply(Message message) {
         return Mono.fromCallable(() -> objectMapper.readValue(message.body(), User.class))
-                .doOnNext(user -> log.info(user.toString().toUpperCase()))
+                .map(this::toUpperCase)
+                .doOnNext(user -> log.info(user.toString()))
                 .flatMap(saveUserEventUseCase::execute)
                 .then();
+    }
+
+    private User toUpperCase(User user) {
+        return user.toBuilder()
+                .firstName(upper(user.getFirstName()))
+                .lastName(upper(user.getLastName()))
+                .email(upper(user.getEmail()))
+                .build();
+    }
+
+    private String upper(String value) {
+        return value == null ? null : value.toUpperCase();
     }
 }

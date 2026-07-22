@@ -29,7 +29,7 @@ public class UserRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Flux<User> findByFirstNameAndLastName(String firstName, String lastName) {
-        return repository.findByFirstNameIgnoreCaseAndLastNameIgnoreCase(firstName, lastName).map(this::toEntity);
+    public Flux<User> findByFirstName(String firstName) {
+        return repository.findByFirstNameIgnoreCase(firstName).map(this::toEntity);
     }
 }
