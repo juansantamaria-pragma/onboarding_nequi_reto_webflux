@@ -5,6 +5,7 @@ import co.com.retowebflux.api.dto.ResponseGetUser;
 import co.com.retowebflux.usecase.createuser.CreateUserUseCase;
 import co.com.retowebflux.usecase.findallusers.FindAllUsersUseCase;
 import co.com.retowebflux.usecase.finduserbyid.FindUserByIdUseCase;
+import co.com.retowebflux.usecase.findusersbyname.FindUsersByNameUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -19,6 +20,7 @@ public class Handler {
     private final CreateUserUseCase createUserUseCase;
     private final FindUserByIdUseCase findUserByIdUseCase;
     private final FindAllUsersUseCase findAllUsersUseCase;
+    private final FindUsersByNameUseCase findUsersByNameUseCase;
 
     public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
         return Mono.fromCallable(() -> Long.parseLong(serverRequest.pathVariable("id")))
@@ -42,8 +44,12 @@ public class Handler {
 
     }
 
-    public Mono<ServerResponse> listenPOSTUseCase(ServerRequest serverRequest) {
-        // useCase.logic();
-        return ServerResponse.ok().bodyValue("");
+    public Mono<ServerResponse> searchUsersByName(ServerRequest serverRequest) {
+        String firstName = serverRequest.queryParam("firstName").orElse(null);
+        String lastName = serverRequest.queryParam("lastName").orElse(null);
+        return findUsersByNameUseCase.execute(firstName, lastName)
+                .map(ResponseGetUser::from)
+                .collectList()
+                .flatMap(users -> ServerResponse.ok().bodyValue(users));
     }
 }
